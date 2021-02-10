@@ -1,0 +1,9 @@
+# node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+#extraArchives
+a7.pdf
+example.png
+cdv/cartaoDeVisitaTemplate2
