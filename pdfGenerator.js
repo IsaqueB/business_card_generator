@@ -1,5 +1,5 @@
 const jspdf = require('jspdf')
-const fs = require('fs')
+//const fs = require('fs')
 const browserScreenshot = require('./browserScreenshot')
 
 module.exports = {
@@ -18,11 +18,15 @@ module.exports = {
             unit: 'px',
             format: [screenshotParams.screenshotFormat.width, screenshotParams.screenshotFormat.height]
         });
-        let screenshot = fs.readFileSync(screenshotParams.path, {encoding: 'base64'})
+        let screenshot = screenshotParams.image
         doc.addImage(screenshot, 'JPEG', 0, 0, screenshotParams.screenshotFormat.width, screenshotParams.screenshotFormat.height, 'test', 'NONE', 0)
         addLinksToPdf(doc, screenshotParams.params)
-        await doc.save("a7.pdf")
-        res.status(201).download('./a7.pdf')
+        res.type('pdf')
+        res.send(new Buffer.from(doc.output('arraybuffer'), 'base64'))
+        //fs.writeFile('./here.pdf',new Int32Array(await doc.output('arraybuffer')), (err)=>{if(err){console.log(err)}})
+        //res.send(new Int32Array(await doc.output('arraybuffer')))
+        //await doc.save("a7.pdf")
+        //res.status(200).download('./a7.pdf')
     }
 }
 function addLinksToPdf(instanceOfDoc, paramsForLinks){

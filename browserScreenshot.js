@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer')
 const fs = require('fs')
 
 module.exports = async (infoFromRequest) => {
-    fillTemplate(infoFromRequest)
+    const htmlForPuppeteer = await fillHtmlTemplate(infoFromRequest)//Precisa que o style seja feito dentro do arquivo html
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     const pageFormat = {
@@ -10,27 +10,43 @@ module.exports = async (infoFromRequest) => {
         height: infoFromRequest.format.height
     }
     await page.setViewport(pageFormat)
-    await page.goto('file:///home/951548599/works/poc-jspdf/cdv/cartaoDeVisitaTemplate2.html');
-    await page.screenshot({path: './example.png'})
+    await page.setContent('html')
+    await page.goto('data:text/html,'+htmlForPuppeteer);
+    const image = await page.screenshot({type: 'png'})
     const paramsForLink = await page.$$eval('.link', setParamsForLinks)
     await browser.close();
     return({
         params: paramsForLink,
-        path: "./example.png",
+        image: image,
         screenshotFormat: pageFormat
     })
 }
-function fillTemplate(infoFromRequest){
-    fs.readFile('./cdv/cartaoDeVisitaTemplate.html', 'utf8', async function(err, data){
+async function fillHtmlTemplate(infoFromRequest){
+    return new Promise(function(resolve,reject){
+        try{
+            fs.readFile('./cdv/cartaoDeVisitaTemplate.html', 'utf8', async function(err, data){
+                if(err){return err}
+                data = data.replace('headerLabelPlaceholder', infoFromRequest.header)
+                data = data.replace('./dogpaw1.png', infoFromRequest.profilePic)
+                data = data.replace('profileNamePlaceholder', infoFromRequest.name)
+                data = data.replace('profileEmailPlaceholder', infoFromRequest.email)
+                data = data.replace('profileContactPlaceholder', infoFromRequest.contact)
+                fs.writeFile('./cdv/cartaoDeVisitaTemplate2.html',data, 'utf8', (err) => {if(err){return err}})
+                resolve(data)
+            })
+        }catch(err){
+            reject(err)
+        }
+    })
+    /*fs.readFile('./cdv/cartaoDeVisitaTemplate.html', 'utf8', async function(err, data){
         if(err){return err}
         data = data.replace('headerLabelPlaceholder', infoFromRequest.header)
         data = data.replace('./dogpaw1.png', infoFromRequest.profilePic)
         data = data.replace('profileNamePlaceholder', infoFromRequest.name)
         data = data.replace('profileEmailPlaceholder', infoFromRequest.email)
         data = data.replace('profileContactPlaceholder', infoFromRequest.contact)
-        fs.writeFile('./cdv/cartaoDeVisitaTemplate2.html',data, 'utf8', (err) => {if(err){return err}
-        })
-    })
+        fs.writeFile('./cdv/cartaoDeVisitaTemplate2.html',data, 'utf8', (err) => {if(err){return err}})
+    })*/
 }
 function setParamsForLinks(aTags){
     let links = ["http://br.linkedin.com","http://www.unifor.br","http://www.gmail.com"]
